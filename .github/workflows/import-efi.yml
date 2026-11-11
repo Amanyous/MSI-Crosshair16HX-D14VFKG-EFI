@@ -1,0 +1,38 @@
+name: Import sanitized EFI snapshot
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and verify the existing EFI release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v2026.11.11-efi --repo "$GITHUB_REPOSITORY" --pattern MSI-Crosshair16HX-D14VFKG-EFI-20261111.zip --dir "$RUNNER_TEMP"
+          echo "52b5be66ac24fb994ec6a71b24962c8447b7975afe0e7602d6767de81ede9562  $RUNNER_TEMP/MSI-Crosshair16HX-D14VFKG-EFI-20261111.zip" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/MSI-Crosshair16HX-D14VFKG-EFI-20261111.zip" -d "$RUNNER_TEMP/efi-import"
+      - name: Validate and commit the directory
+        run: |
+          python3 - <<'PY'
+          import pathlib, plistlib, shutil
+          root = pathlib.Path(__import__("os").environ["RUNNER_TEMP"]) / "efi-import"
+          files = [p for p in root.rglob("*") if p.is_file()]
+          assert len(files) == 163
+          assert all(p.relative_to(root).parts[0] == "EFI" for p in files)
+          assert not any("backup" in p.name.lower() or "before" in p.name.lower() for p in files)
+          config = plistlib.loads((root / "EFI/OC/config.plist").read_bytes())
+          generic = config["PlatformInfo"]["Generic"]
+          assert all(generic[k] == "" for k in ("MLB", "SystemSerialNumber", "SystemUUID"))
+          assert generic["ROM"] == bytes(6)
+          assert not pathlib.Path("EFI").exists(), "Already imported; refusing to replace EFI"
+          shutil.copytree(root / "EFI", "EFI")
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add EFI
+          git commit -m "Import sanitized USB EFI directory"
+          git push
