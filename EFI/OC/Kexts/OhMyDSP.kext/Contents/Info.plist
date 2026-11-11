@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>OhMyDSP</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.ohmydsp.OhMyDSP</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>OhMyDSP</string>
+	<key>CFBundlePackageType</key>
+	<string>KEXT</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.3.3</string>
+	<key>CFBundleVersion</key>
+	<string>0.3.3</string>
+	<key>IOKitPersonalities</key>
+	<dict>
+		<key>OhMyDSP</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.ohmydsp.OhMyDSP</string>
+			<key>IOClass</key>
+			<string>OhMyDSP</string>
+			<key>IOMatchCategory</key>
+			<string>OhMyDSP</string>
+			<key>IOPCIClassMatch</key>
+			<string>0x04010000&amp;0xffff0000</string>
+			<key>IOPCIMatch</key>
+			<string>0x06c88086 0x7a508086</string>
+			<key>IOProbeScore</key>
+			<integer>1</integer>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+			<key>IOUserClientClass</key>
+			<string>OhMyDSPUserClient</string>
+		</dict>
+	</dict>
+	<key>OSBundleLibraries</key>
+	<dict>
+		<key>com.apple.iokit.IOPCIFamily</key>
+		<string>2.9</string>
+		<key>com.apple.kpi.bsd</key>
+		<string>9.0</string>
+		<key>com.apple.kpi.iokit</key>
+		<string>9.0</string>
+		<key>com.apple.kpi.libkern</key>
+		<string>9.0</string>
+		<key>com.apple.kpi.mach</key>
+		<string>9.0</string>
+		<key>com.apple.kpi.unsupported</key>
+		<string>8.0</string>
+	</dict>
+</dict>
+</plist>
