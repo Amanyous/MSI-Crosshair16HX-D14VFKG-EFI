@@ -37,7 +37,7 @@
 | Intel 集成显卡 | x | 不可用。 |
 | 内屏 / HiDPI | ✓ | 默认只支持 1280 × 600 和 2500 × 1600。如需合适的分辨率，安装 NullMoth 驱动后按其说明配置 `nvfbhidpi=1`，修改 EDID 并导入，再在 BetterDisplay 中调整分辨率。上传的 EFI 未预置此参数。 |
 | 屏幕亮度 | ✓ | 在 1401 App 中点击 `Turn brightness on`，或手动在 OpenCore 的 `boot-args` 中添加 `nvrmacpibl=1`，重启后生效；开启后亮度调节正常。上传的 EFI 未预置此参数。 |
-| AX211 Wi-Fi | ✓ | 当前使用 AirportItlwm，已开启 Wi-Fi 6，不支持 WPA3。 |
+| AX211 Wi-Fi | ✓ | 当前使用 [AirportItlwm（laobamac/itlwm）](https://github.com/laobamac/itlwm)，已开启 Wi-Fi 6，不支持 WPA3。 |
 | 蓝牙 | ✓ | 可用。 |
 | Realtek 有线网卡 | 待验证 | 已配置 RealtekRTL8111，未完成实际联网验证。 |
 | ALC256 扬声器 | ✓ | 可用。 |
@@ -62,6 +62,28 @@
 | SATA 模式 | AHCI |
 
 保存设置后启动安装介质。RTX 4060 Laptop 使用的 NullMoth 驱动需要进入系统后另行安装。
+
+## HiDPI 安装
+
+本仓库提供 [HiDPI-Minimal 显示覆盖配置](HiDPI-Minimal/) 和 [完整安装 / 恢复教程](HiDPI-Minimal/安装教程.md)，适用于本机 AUO07B2（厂商 ID `6af`、产品 ID `7b2`）2560 × 1600 面板。
+
+1. 先进入系统，按 [NullMoth 项目说明](https://github.com/nullmoth/nvidia-macos-driver) 安装显卡驱动，在实际启动的 OpenCore `boot-args` 中加入 `nvfbhidpi=1`。上传的 EFI 未预置该参数。
+2. 下载仓库 ZIP 并解压，把其中的 `HiDPI-Minimal` 文件夹放到桌面。已有显示覆盖文件时，先按完整教程备份。
+3. 在终端执行以下命令安装本机覆盖配置：
+
+```sh
+sudo mkdir -p /Library/Displays/Contents/Resources/Overrides/DisplayVendorID-6af
+sudo install -o root -g wheel -m 644 "$HOME/Desktop/HiDPI-Minimal/DisplayVendorID-6af/DisplayProductID-7b2" /Library/Displays/Contents/Resources/Overrides/DisplayVendorID-6af/DisplayProductID-7b2
+```
+
+4. 手动重启，运行 `nvram boot-args` 确认包含 `nvfbhidpi=1`。
+5. 安装 [BetterDisplay（GitHub）](https://github.com/waydabber/BetterDisplay)，在应用中开启 HiDPI，并调整分辨率；240 Hz 是否可选以实际显示为准。
+
+目标 HiDPI 档位包括 1280 × 800、1440 × 900、1600 × 1000 和 1920 × 1200，是否全部可用及能否同时使用 240 Hz 仍需实机确认。
+
+**文件类型说明：** 本包的 `DisplayProductID-7b2` 是 macOS 显示覆盖 plist，不含修改版 EDID。它应安装到上面的 Overrides 路径，不能在 BetterDisplay 的“加载 EDID 数据”中导入。如果另外采用修改 EDID 的方案，需要准备单独的 EDID 文件。本教程不写入屏幕 EEPROM，也不需要修改 `/System`。
+
+随包教程中“此前已配置”“无需重复安装”等描述指作者本机；首次使用仓库配置时，请按上述步骤满足前置条件。
 
 ## 数字麦克风驱动
 
