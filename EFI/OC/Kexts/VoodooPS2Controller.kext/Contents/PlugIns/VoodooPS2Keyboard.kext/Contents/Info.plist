@@ -280,10 +280,14 @@
 					<key>Breakless PS2</key>
 					<array>
 						<string>;Items must be strings in the form of breaklessscan (in hex)</string>
+						<string>e06f</string>
 					</array>
 					<key>Custom ADB Map</key>
 					<array>
 						<string>;Items must be strings in the form of scanfrom=adbto (in hex)</string>
+						<string>e071=4f</string>
+						<string>e057=50</string>
+						<string>e06f=40</string>
 					</array>
 					<key>Custom PS2 Map</key>
 					<array>
@@ -295,12 +299,20 @@
 					<integer>250</integer>
 					<key>LogScanCodes</key>
 					<integer>0</integer>
+					<key>Macro Inversion</key>
+					<array>
+						<data>
+						//8Cb///AAABHQJbAXYBnQLbAfY=
+						</data>
+					</array>
 					<key>Make Application key into Apple Fn key</key>
 					<false/>
 					<key>Make Application key into right windows</key>
 					<true/>
 					<key>Make right modifier keys into Hangul and Hanja</key>
 					<false/>
+					<key>MaximumMacroTime</key>
+					<integer>5000000</integer>
 					<key>SleepPressTime</key>
 					<integer>0</integer>
 					<key>Swap capslock and left control</key>
