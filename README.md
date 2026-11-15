@@ -1,6 +1,6 @@
 # MSI Crosshair 16 HX D14VFKG EFI
 
-微星 Crosshair 16 HX D14VFKG 黑苹果 EFI，更新于 2026-11-11。
+微星 Crosshair 16 HX D14VFKG 黑苹果 EFI，功能状态更新于 2026-11-15。
 本 EFI 驱动基于 NullMoth 的 1401 修改。
 本配置在独显模式下可用，混合模式尚未测试。
 当前运行 macOS 26.7.3（25G342），SMBIOS 使用 MacBookPro16,2。
@@ -37,19 +37,33 @@
 | Intel 集成显卡 | x | 不可用。 |
 | 内屏 / HiDPI | ✓ | 默认只支持 1280 × 600 和 2500 × 1600。如需合适的分辨率，安装 NullMoth 驱动后按其说明配置 `nvfbhidpi=1`，修改 EDID 并导入，再在 BetterDisplay 中调整分辨率。上传的 EFI 未预置此参数。 |
 | 屏幕亮度 | ✓ | 在 1401 App 中点击 `Turn brightness on`，或手动在 OpenCore 的 `boot-args` 中添加 `nvrmacpibl=1`，重启后生效；开启后亮度调节正常。上传的 EFI 未预置此参数。 |
-| AX211 Wi-Fi | ✓ | 当前使用 [AirportItlwm（laobamac/itlwm）](https://github.com/laobamac/itlwm)，已开启 Wi-Fi 6，不支持 WPA3。 |
+| AX211 Wi-Fi | ✓ | 当前使用 [ForbiddenItlwm](https://github.com/retropineaple/ForbiddenItlwm)，本机安装版本为 0.5.4-beta.2，搭配 BTLEAdvFixup 0.9.1；已开启 Wi-Fi 6，不支持 WPA3。 |
 | 蓝牙 | ✓ | 可用。 |
 | Realtek 有线网卡 | 待验证 | 已配置 RealtekRTL8111，未完成实际联网验证。 |
 | ALC256 扬声器 | ✓ | 可用。 |
 | Intel 数字麦克风（DMIC） | ✓ | OhMyDSP 核心 0.3.3 / HAL 0.3.4；本机已有实际收音反馈，需要安装完整系统组件。 |
 | 键盘 | ✓ | 可用。 |
+| F4 触控板开关 | ✓ | 需要 MSI Control。 |
+| F5 麦克风禁用 | ✓ | 需要 MSI Control。 |
+| F6 蓝牙开关 | ✓ | 需要 MSI Control。 |
+| Num Lock 提示灯 | ✓ | 需要 MSI Control。 |
+| 键盘功能提示灯 | ✓ | 需要 MSI Control。 |
 | 触控板 | ✓ | 可用。 |
 | 内置相机 | ✓ | FaceTime 可用；bug：Photo Booth 黑屏。 |
 | Apple 账户 | ✓ | 本机可用。上传文件已清除三码，使用前须自行生成并填写；不要共用他人的三码，以降低账户异常风险，不保证避免封号。 |
 | 电池电量 | ✓ | 电量不准确，不会及时同步。 |
-| 睡眠 / 唤醒 | x | 曾出现睡眠后重启，尚未确认修复。 |
-| 隔空传送（AirDrop） | x | MacBook 无法发现本机，当前配置尚未解决。 |
+| 睡眠 / 唤醒 | x | NullMoth 3.0 下仍复现睡眠后自动重启，报告为 EFI Sleep Wake Failure `0x1f`；原因仍在排查。 |
+| 隔空传送（AirDrop） | ✓ | 本机已确认可用。 |
 | 安卓 / iPhone USB 网络共享 | ✓ | 可用。 |
+
+### 键盘与 MSI Control
+
+F4 可切换触控板，F5 可禁用麦克风，F6 可切换蓝牙，均需要运行 MSI Control。
+Num Lock 和键盘功能提示灯已确认正常，也需要 MSI Control。
+这些状态不表示所有功能键都已统一为按住 Fn 才触发。
+
+以上为本机当前系统的实测反馈，不代表仅复制仓库 EFI 就能获得全部功能。
+显卡、数字麦克风及 MSI Control 相关功能还需要对应的系统驱动或应用。
 
 ## BIOS 设置
 
@@ -106,10 +120,10 @@ Siri 切换步骤为本机用户反馈的临时方法，未修复底层切换问
 
 ## 使用前
 
-仓库的 `EFI/BOOT`、`EFI/OC` 是展开后的文件目录；Releases 另有 EFI 快照压缩包。
+仓库的 `EFI/BOOT`、`EFI/OC` 为 2026-11-15 硬盘 EFI 的脱敏副本；旧 Releases 中的 2026-11-11 压缩包不是当前版本。
 备份配置、隐藏元数据和日志未上传；序列号、MLB、UUID、ROM 及蓝牙控制器身份已清除，
-使用前须自行生成 SMBIOS 身份信息。U 盘原始 EFI 未因上传而改动。
+使用前须自行生成 SMBIOS 身份信息。硬盘和 U 盘原始 EFI 均未因上传而改动，Microsoft 启动目录不包含在仓库中。
 
-上传的 EFI 已移除 NullMoth 的 NVIDIA 启动参数、配套 AMFI / IPC 启动参数及 `IONDRVSupport` 屏蔽项，进入系统后须按 NullMoth 上游说明安装驱动并配置。表格中的可用状态为本机安装驱动后的反馈。
+上传的 EFI 已移除 NullMoth 的 NVIDIA 启动参数、配套 AMFI / IPC 启动参数、`IONDRVSupport` 屏蔽项和 NullMothSafe 工具，进入系统后须按 NullMoth 上游说明安装驱动并配置。表格中的可用状态为本机安装驱动后的反馈。
 本机已安装驱动的系统曾因移除 AMFI 参数导致黑屏；此次仅清理上传副本，U 盘正在使用的配置保持不变。
 不要将这份配置直接覆盖到不同硬件上。第三方二进制与源码遵循各自上游许可证。
