@@ -8,31 +8,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download and verify the existing EFI release
+      - name: Download and verify EFI snapshot
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download v2026.11.11-efi --repo "$GITHUB_REPOSITORY" --pattern MSI-Crosshair16HX-D14VFKG-EFI-20261111.zip --dir "$RUNNER_TEMP"
-          echo "52b5be66ac24fb994ec6a71b24962c8447b7975afe0e7602d6767de81ede9562  $RUNNER_TEMP/MSI-Crosshair16HX-D14VFKG-EFI-20261111.zip" | sha256sum -c -
-          unzip -q "$RUNNER_TEMP/MSI-Crosshair16HX-D14VFKG-EFI-20261111.zip" -d "$RUNNER_TEMP/efi-import"
-      - name: Validate and commit the directory
-        run: |
+          gh release download v2026.11.15-efi --repo "$GITHUB_REPOSITORY" --pattern MSI-Crosshair16HX-D14VFKG-EFI-20261115.zip --dir "$RUNNER_TEMP"
+          echo "28302c989f44c1edbba1e48ff6f323b78d4388e0204565dc0915563e57585a1e  $RUNNER_TEMP/MSI-Crosshair16HX-D14VFKG-EFI-20261115.zip" | sha256sum -c -
           python3 - <<'PY'
-          import pathlib, plistlib, shutil
-          root = pathlib.Path(__import__("os").environ["RUNNER_TEMP"]) / "efi-import"
+          import os, pathlib, plistlib, shutil, zipfile
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "efi-import"
+          archive = root.parent / "MSI-Crosshair16HX-D14VFKG-EFI-20261115.zip"
+          with zipfile.ZipFile(archive) as z:
+              for item in z.infolist():
+                  p = pathlib.PurePosixPath(item.filename)
+                  assert not p.is_absolute() and ".." not in p.parts
+                  assert p.parts[0] == "EFI"
+              z.extractall(root)
           files = [p for p in root.rglob("*") if p.is_file()]
-          assert len(files) == 163
-          assert all(p.relative_to(root).parts[0] == "EFI" for p in files)
-          assert not any("backup" in p.name.lower() or "before" in p.name.lower() for p in files)
+          assert len(files) == 171
+          assert all(p.relative_to(root).parts[:2] in (("EFI", "BOOT"), ("EFI", "OC")) for p in files)
+          assert not any("backup" in p.name.lower() or "before" in p.name.lower() or p.name.startswith(".") for p in files)
           config = plistlib.loads((root / "EFI/OC/config.plist").read_bytes())
           generic = config["PlatformInfo"]["Generic"]
           assert all(generic[k] == "" for k in ("MLB", "SystemSerialNumber", "SystemUUID"))
-          assert generic["ROM"] == bytes(6)
-          assert not pathlib.Path("EFI").exists(), "Already imported; refusing to replace EFI"
+          assert generic["ROM"] == b""
+          args = " ".join(str(v.get("boot-args", "")) for v in config["NVRAM"]["Add"].values())
+          assert not any(a.startswith(("nvfb", "nvaccel", "nvrmacpibl", "amfi", "ipc_control_port_options")) or a == "-nvkmsnosmooth" for a in args.split())
+          assert not any(p.name.startswith("NullMothSafe") for p in files)
+          assert not any(x.get("Identifier") == "com.apple.iokit.IONDRVSupport" for x in config["Kernel"]["Block"])
+          if pathlib.Path("EFI").exists():
+              shutil.rmtree("EFI")
           shutil.copytree(root / "EFI", "EFI")
           PY
+      - name: Commit updated EFI directory
+        run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add EFI
-          git commit -m "Import sanitized USB EFI directory"
-          git push
+          git add -A EFI
+          if ! git diff --cached --quiet; then
+            git commit -m "Replace EFI with sanitized internal-disk snapshot 2026-11-15"
+            git push
+          fi
