@@ -2,6 +2,7 @@
 
 微星 Crosshair 16 HX D14VFKG 黑苹果 EFI，功能状态更新于 2026-11-15。
 本 EFI 驱动基于 NullMoth 的 1401 修改。
+本仓库 EFI 已包含 MSI Control 所需的 EFI 改动，包括 MSIECBridge 驱动和配套键盘配置，无需重复修改这些条目。MSI Control 应用仍需在系统内另行安装并运行。
 本配置在独显模式下可用，混合模式尚未测试。
 当前运行 macOS 26.7.3（25G342），SMBIOS 使用 MacBookPro16,2。
 本配置针对本机调试，同为第 14 代 Intel 处理器不代表可以直接通用。
