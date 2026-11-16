@@ -150,13 +150,18 @@ Siri 切换步骤为本机用户反馈的临时方法，未修复底层切换问
 ### 蓝牙控制器配置
 
 蓝牙身份与 SMBIOS 三码不是同一套数据，也不能用 ROM 或网卡 MAC 代替 `bluetoothInternalControllerInfo`。
-上传副本已移除原机的蓝牙 NVRAM 注入值，保留蓝牙驱动及 USB 映射。
+上传副本已移除原机身份数据，保留蓝牙驱动及 USB 映射，并按 [BlueToolFixup 官方说明](https://github.com/acidanthera/BrcmPatchRAM#bluetoolfixup) 保留 Intel 蓝牙所需的通用兼容参数。
 
-1. 首次使用先保留这些身份注入项缺省，从这份 EFI 启动后检查系统是否能正常识别蓝牙；正常则不需要手工补写。
-2. 如果有同一台机器、同一个蓝牙控制器的正常 EFI 备份，可从该备份恢复 `NVRAM → Add → 7C436110-AB2A-4BBB-A880-FE41995C9F82` 下原有的蓝牙项，保持原类型和值。不要复制作者或其他机器的数据。
-3. `bluetoothInternalControllerInfo` 如需恢复，应使用本机正常备份中的完整 Data，不能按其他机型模板拼接。没有可靠备份时，不要随便填零或伪造地址。
-4. `bluetoothExternalDongleFailed` 是状态变量，不是控制器地址；不应拿它填写蓝牙 MAC。
-5. 没有备份又无法启用时，先检查 IntelBluetoothFirmware / BlueToolFixup 的加载情况及蓝牙所在 USB 端口映射，再按所用驱动的说明处理。不要把“补身份”当作所有蓝牙故障的通用修复。
+以下两项已填写在 `NVRAM → Add → 7C436110-AB2A-4BBB-A880-FE41995C9F82`，均为 Data，不是字符串：
+
+| 参数 | 十六进制值 | 说明 |
+| --- | --- | --- |
+| `bluetoothExternalDongleFailed` | `00` | 1 字节零值，状态变量，不是蓝牙 MAC |
+| `bluetoothInternalControllerInfo` | `0000000000000000000000000000` | 13 字节零值，驱动要求的通用兼容值，不含原机地址 |
+
+无需自行填写作者或其他机器的蓝牙地址，也不要用 ROM 替代上述值。原有 `NVRAM → Delete` 中的同名项保留，用于启动时先清除旧值，再由 Add 写入通用值。
+之前教程中“不要填零、只能恢复原机完整 Data”的说明不适用于这里的 BlueToolFixup 通用参数，现已纠正。
+若仍无法启用，检查 IntelBluetoothFirmware / BlueToolFixup 的加载情况及蓝牙所在 USB 端口映射；这两项不保证能解决所有蓝牙故障，也不等于已验证隔空投送可用。
 
 重新配对可能是必要的。重置 NVRAM 会影响其他启动设置，不作为安装必做步骤；确需操作时先保留备用启动介质与配置备份。
 
