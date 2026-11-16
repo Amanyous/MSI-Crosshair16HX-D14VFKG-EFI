@@ -121,10 +121,45 @@ Siri 切换步骤为本机用户反馈的临时方法，未修复底层切换问
 
 ## 使用前
 
-仓库的 `EFI/BOOT`、`EFI/OC` 为 2026-11-15 硬盘 EFI 的脱敏副本；旧 Releases 中的 2026-11-11 压缩包不是当前版本。
+仓库的 `EFI/BOOT`、`EFI/OC` 为 2026-11-16 硬盘 EFI 的脱敏副本；旧 Releases 压缩包不代表当前目录版本。
 备份配置、隐藏元数据和日志未上传；序列号、MLB、UUID、ROM 及蓝牙控制器身份已清除，
 使用前须自行生成 SMBIOS 身份信息。硬盘和 U 盘原始 EFI 均未因上传而改动，Microsoft 启动目录不包含在仓库中。
 
 上传的 EFI 已移除 NullMoth 的 NVIDIA 启动参数、配套 AMFI / IPC 启动参数、`IONDRVSupport` 屏蔽项和 NullMothSafe 工具，进入系统后须按 NullMoth 上游说明安装驱动并配置。表格中的可用状态为本机安装驱动后的反馈。
 本机已安装驱动的系统曾因移除 AMFI 参数导致黑屏；此次仅清理上传副本，U 盘正在使用的配置保持不变。
 不要将这份配置直接覆盖到不同硬件上。第三方二进制与源码遵循各自上游许可证。
+
+### 填写三码与 ROM
+
+先备份现有可启动 EFI，使用 ProperTree 打开准备安装的 `EFI/OC/config.plist`，编辑 `PlatformInfo → Generic`。不要修改正在使用的唯一启动配置后直接覆盖。
+
+1. 使用 [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS) 为 `MacBookPro16,2` 生成一组新的身份信息，不要使用真实 Mac 或其他人的三码。
+2. 将生成结果按下表填写；保留本配置的 `SystemProductName=MacBookPro16,2`，不要随意改机型。
+3. 保存并检查 plist，先通过备用启动介质确认可启动，再替换硬盘 EFI。已有正常工作的个人身份时，优先从自己的备份恢复，避免反复生成和更换。
+
+| Generic 字段 | 类型 | 填写内容 |
+| --- | --- | --- |
+| `SystemSerialNumber` | String | GenSMBIOS 的 Serial |
+| `MLB` | String | GenSMBIOS 的 Board Serial |
+| `SystemUUID` | String | GenSMBIOS 的 SmUUID |
+| `ROM` | Data | 本机固定网卡的 MAC 地址，去掉冒号后共 12 个十六进制字符，即 6 字节；不是蓝牙地址 |
+
+例如 `AA:BB:CC:DD:EE:FF` 在 Data 编辑框中填写为 `AABBCCDDEEFF`，仅为格式示例，不要照抄。不要把 12 个字符作为普通字符串填写。
+三码和 ROM 不要上传到 GitHub。填写正确也不保证 Apple 服务一定可用，更不能保证账户不会受限。可参考 [OpenCore Apple 服务配置说明](https://dortania.github.io/OpenCore-Post-Install/universal/iservices.html)。
+
+### 蓝牙控制器配置
+
+蓝牙身份与 SMBIOS 三码不是同一套数据，也不能用 ROM 或网卡 MAC 代替 `bluetoothInternalControllerInfo`。
+上传副本已移除原机的蓝牙 NVRAM 注入值，保留蓝牙驱动及 USB 映射。
+
+1. 首次使用先保留这些身份注入项缺省，从这份 EFI 启动后检查系统是否能正常识别蓝牙；正常则不需要手工补写。
+2. 如果有同一台机器、同一个蓝牙控制器的正常 EFI 备份，可从该备份恢复 `NVRAM → Add → 7C436110-AB2A-4BBB-A880-FE41995C9F82` 下原有的蓝牙项，保持原类型和值。不要复制作者或其他机器的数据。
+3. `bluetoothInternalControllerInfo` 如需恢复，应使用本机正常备份中的完整 Data，不能按其他机型模板拼接。没有可靠备份时，不要随便填零或伪造地址。
+4. `bluetoothExternalDongleFailed` 是状态变量，不是控制器地址；不应拿它填写蓝牙 MAC。
+5. 没有备份又无法启用时，先检查 IntelBluetoothFirmware / BlueToolFixup 的加载情况及蓝牙所在 USB 端口映射，再按所用驱动的说明处理。不要把“补身份”当作所有蓝牙故障的通用修复。
+
+重新配对可能是必要的。重置 NVRAM 会影响其他启动设置，不作为安装必做步骤；确需操作时先保留备用启动介质与配置备份。
+
+### 本次 EFI 更新
+
+包含当前硬盘的 CPUFriend / CPUFriendDataProvider 和 MSIECBridge 0.4.9。EC 驱动的新增频率采集接口需要匹配的 MSI Control 应用；上方旧版下载链接不代表包含全部新功能。全核频率采集受内核版本限制，未验证其他机器的兼容性。
