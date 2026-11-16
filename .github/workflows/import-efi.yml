@@ -12,21 +12,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download v2026.11.15-efi --repo "$GITHUB_REPOSITORY" --pattern MSI-Crosshair16HX-D14VFKG-EFI-20261115.zip --dir "$RUNNER_TEMP"
-          echo "28302c989f44c1edbba1e48ff6f323b78d4388e0204565dc0915563e57585a1e  $RUNNER_TEMP/MSI-Crosshair16HX-D14VFKG-EFI-20261115.zip" | sha256sum -c -
+          gh release download v2026.11.16-efi --repo "$GITHUB_REPOSITORY" --pattern MSI-Crosshair16HX-D14VFKG-EFI-20261116.zip --dir "$RUNNER_TEMP"
+          echo "70402807024a55f4527994a1697c430581d25e366d2a479d62021c1ea76ef956  $RUNNER_TEMP/MSI-Crosshair16HX-D14VFKG-EFI-20261116.zip" | sha256sum -c -
           python3 - <<'PY'
           import os, pathlib, plistlib, shutil, zipfile
           root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "efi-import"
-          archive = root.parent / "MSI-Crosshair16HX-D14VFKG-EFI-20261115.zip"
+          archive = root.parent / "MSI-Crosshair16HX-D14VFKG-EFI-20261116.zip"
           with zipfile.ZipFile(archive) as z:
               for item in z.infolist():
                   p = pathlib.PurePosixPath(item.filename)
                   assert not p.is_absolute() and ".." not in p.parts
-                  assert p.parts[0] == "EFI"
+                  assert p.parts[0] == "EFI" or str(p) == "README.md"
               z.extractall(root)
           files = [p for p in root.rglob("*") if p.is_file()]
-          assert len(files) == 171
-          assert all(p.relative_to(root).parts[:2] in (("EFI", "BOOT"), ("EFI", "OC")) for p in files)
+          assert len(files) == 172
+          assert all(p.relative_to(root).parts[:2] in (("EFI", "BOOT"), ("EFI", "OC")) or p.name == "README.md" for p in files)
           assert not any("backup" in p.name.lower() or "before" in p.name.lower() or p.name.startswith(".") for p in files)
           config = plistlib.loads((root / "EFI/OC/config.plist").read_bytes())
           generic = config["PlatformInfo"]["Generic"]
@@ -39,13 +39,14 @@ jobs:
           if pathlib.Path("EFI").exists():
               shutil.rmtree("EFI")
           shutil.copytree(root / "EFI", "EFI")
+          shutil.copy2(root / "README.md", "README.md")
           PY
       - name: Commit updated EFI directory
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add -A EFI
+          git add -A EFI README.md
           if ! git diff --cached --quiet; then
-            git commit -m "Replace EFI with sanitized internal-disk snapshot 2026-11-15"
+            git commit -m "Update internal EFI snapshot and identity setup guide 2026-11-16"
             git push
           fi
